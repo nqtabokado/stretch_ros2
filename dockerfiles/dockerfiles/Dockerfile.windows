@@ -1,0 +1,70 @@
+# Indicates docker image (ROS2 Galactic)
+FROM osrf/ros:galactic-desktop
+
+# Configure environment
+ENV DISPLAY host.docker.internal:0.0
+
+# Listens to port
+EXPOSE 8080
+EXPOSE 9090
+
+# Copy install scripts
+COPY ./dockerfiles/install /root/install
+
+# Run dependencies installation
+RUN chmod +x /root/install/*
+RUN sed -i -e 's/\r$//' /root/install/i_dep.sh
+RUN /bin/sh -e -c /root/install/i_dep.sh
+
+# Set default bash shell
+SHELL ["/bin/bash", "-c"]
+
+# Set working directory
+WORKDIR /root/catkin_ws
+
+# Set environment variables (source Galactic setup)
+RUN echo "source /opt/ros/galactic/setup.bash" >> ~/.bashrc
+
+# Thêm repo Gazebo
+RUN apt-get install -y wget python3-pip lsb-release gnupg curl python3-vcstool python3-colcon-common-extensions git
+RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list && \
+    wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
+
+# Cài libignition-gazebo6-dev và cập nhật hệ thống
+RUN apt-get update && \
+    apt-get install -y libignition-gazebo6-dev
+
+# Cài rosdep và cập nhật cache
+RUN apt-get update && \
+    apt-get dist-upgrade && \
+    rosdep update
+
+# Cài các công cụ build
+RUN apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    libbullet-dev \
+    python3-flake8 \
+    python3-pip \
+    python3-pytest-cov \
+    python3-rosdep \
+    python3-setuptools \
+    clang-format-10
+
+# Cài các gói pip dùng cho testing
+RUN python3 -m pip install --upgrade \
+    argcomplete \
+    flake8-blind-except \
+    flake8-builtins \
+    flake8-class-newline \
+    flake8-comprehensions \
+    flake8-deprecated \
+    flake8-docstrings \
+    flake8-import-order \
+    flake8-quotes \
+    pytest-repeat \
+    pytest-rerunfailures \
+    pytest
+
+RUN apt-get -y install ros-galactic-xacro ros-galactic-realsense2-description ros-galactic-ros-ign ros-galactic-nav2-bringup ros-galactic-control-msgs ros-galactic-nav2-simple-commander ros-galactic-gazebo-ros-pkgs ros-galactic-moveit ros-galactic-backward-ros

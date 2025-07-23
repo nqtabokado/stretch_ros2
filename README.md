@@ -229,6 +229,41 @@ We recommend installing an Ubuntu 20.04 in a Virtual Machine and following the i
   ros2 launch stretch_moveit_config demo_ignition.launch.py
   ```
 
+* Run with docker
+  ```bash
+  # docker compose
+  docker compose -f docker-compose.windows.yml up -d
+  # docker exec
+  docker exec -it stretch_ros2-galactic bash
+  # Set workspace path
+  export COLCON_WS=~/catkin_ws
+  # Source built workspace overlay
+  source $COLCON_WS/install/setup.bash
+  # Set Ignition Gazebo version
+  export IGNITION_VERSION=fortress
+  # Add custom model paths for Ignition Gazebo
+  export IGN_GAZEBO_RESOURCE_PATH=$COLCON_WS/src/stretch_ros:$COLCON_WS/src/realsense-ros:$COLCON_WS/src/aws-robomaker-small-house-world/models:$COLCON_WS/src/stretch_ros2
+
+  # Terminal 1
+  colcon build --packages-select stretch_ignition stretch_description stretch_ignition_control --cmake-args -DCMAKE_BUILD_TYPE=Release
+  cd ~/catkin_ws/src
+  git clone https://github.com/vatanaksoytezer/aws-robomaker-small-house-world.git
+  cd ~/catkin_ws/src/aws-robomaker-small-house-world
+  git checkout ignition-port
+  cd ~/catkin_ws
+  colcon build --packages-select aws_robomaker_small_house_world --cmake-args -DCMAKE_BUILD_TYPE=Release
+  cd ~/catkin_ws/src
+  git clone https://github.com/vatanaksoytezer/realsense-ros.git
+  cd ~/catkin_ws/src/realsense-ros
+  git checkout ros2
+  cd ~/catkin_ws
+  ros2 launch stretch_ignition ignition.launch.py aws:=true
+
+  # Terminal 2
+  colcon build --packages-select stretch_moveit_config --cmake-args -DCMAKE_BUILD_TYPE=Release
+  ros2 launch stretch_moveit_config demo_ignition.launch.py
+  ```
+
 ## Editing the source code during the Workshop
 
 Our docker image comes with a pre-built installation of vim, nano and emacs. You can also install your editor of choice via apt-get.

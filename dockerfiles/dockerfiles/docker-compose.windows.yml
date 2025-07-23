@@ -1,0 +1,16 @@
+version: '3.3'
+
+services:
+  stretch_ros2:
+    image: stretch_ros2:galactic
+    user: root
+    container_name: stretch_ros2-galactic
+    build:
+      context: ..
+      dockerfile: ./dockerfiles/Dockerfile.windows
+    volumes:
+      - "../:/root/catkin_ws/src/stretch_ros2/"
+    privileged: True
+    stdin_open: True
+    # network_mode: host
+    command: bash
